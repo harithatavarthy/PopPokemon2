@@ -1,0 +1,686 @@
+
+<html lang="en">
+
+<meta charset="utf-8">
+<meta name="viewport"
+    content="user-scalable=no, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    
+	<head>
+		<title>Fish bursting game</title>
+
+		<style type="text/css">
+			body {
+			
+				margin: 0px;
+				overflow: hidden;
+				width : 100%;
+				
+				-webkit-transform: translateZ(-1000px);
+				-webkit-transform-style: preserve-3d; 
+			
+			}
+			.parallax {
+				position : absolute;
+				display : block; 
+				width : 256px; 
+				height : 192px; 
+				
+				-webkit-transform-origin : 0% 0%;
+				-webkit-transform: scale(4);
+			}
+			
+			.parallax2 {
+				position : absolute;
+				display : block; 
+				width : 256px; 
+				height : 192px; 
+				z-index:4;
+				opacity:1;
+				background:'transparent';
+				-webkit-transform-origin : 0% 0%;
+				-webkit-transform: scale(4);
+			}
+			
+			.gamestart {
+				position : absolute;
+				display : block; 
+				width : 256px; 
+				height : 192px;
+				background-image:url(img/GameStart_256x192.png);
+				
+				top: 192px;
+				left: 256px;
+				z-index:5;
+				opacity: 1;
+				border-radius:10px;
+				-webkit-transition: 0.5s;
+				-webkit-transform-origin : 0% 0%;
+				-webkit-transform: scale(2);
+			}
+			
+			.gamepause {
+				position : absolute;
+				display : block; 
+				width : 256px; 
+				height : 192px;
+				background-image:url(img/GamePause_256x192.png);
+				
+				top: 192px;
+				left: 256px;
+				z-index:5;
+				opacity: 1;
+				border-radius:10px;
+				-webkit-transition: 0.5s;
+				-webkit-transform-origin : 0% 0%;
+				-webkit-transform: scale(2);
+			}
+			
+			.gameresumebutton {
+				position : absolute;
+				display : block; 
+				width : 85px; 
+				height : 25px;
+				background-image:url(img/GameResumeButton.png);
+				
+				top: 145px;
+				left: 25px;
+				z-index:5;
+				opacity: 1;
+				border-radius:0px;
+				-webkit-transition: 0.5s;
+				-webkit-transform-origin : 0% 0%;
+				-webkit-transform: scale(1);
+			}
+			
+			.gamerestartbutton {
+				position : absolute;
+				display : block; 
+				width : 95px; 
+				height : 25px;
+				background-image:url(img/GameRestartButton.png);
+				
+				top: 145px;
+				left: 145px;
+				z-index:5;
+				opacity: 1;
+				border-radius:0px;
+				-webkit-transition: 0.5s;
+				-webkit-transform-origin : 0% 0%;
+				-webkit-transform: scale(1);
+			}
+			
+			.life1 {
+				position : absolute;
+				display : block; 
+				width : 32px; 
+				height : 32px;
+				background-image:url(img/life.png);	
+				top: 10px;
+				left: 900px;
+				z-index:5;
+				opacity: 0.2;
+			}
+			.life2 {
+				position : absolute;
+				display : block; 
+				width : 32px; 
+				height : 32px;
+				background-image:url(img/life.png);	
+				top: 10px;
+				left: 934px;
+				z-index:5;
+				opacity: 0.2;
+			}
+			.life3 {
+				position : absolute;
+				display : block; 
+				width : 32px; 
+				height : 32px;
+				background-image:url(img/life.png);	
+				top: 10px;
+				left: 968px;
+				z-index:5;
+				opacity: 0.2;
+			}
+			
+			.timer {
+				position : absolute;
+				display : block;
+				color:#ffffff; 
+				font-family:"Lucida Console", Times, serif;
+				font-size:1em;
+				width : 600px; 
+				height : 40px; 
+				z-index:5;
+				-webkit-transform-origin : 0% 0%;
+			}
+			
+			.container {
+				
+				position : absolute; 
+				display : block; 
+				-webkit-transform-style: preserve-3d;
+				-webkit-transform : translateZ(0px);
+				overflow : hidden;
+				pointer-events :none;
+				opacity: 0.3;
+				
+				
+			}
+			
+			
+		
+		</style>
+	</head>
+	<body>	
+		<script type="text/javascript" charset="utf-8" src="js/cordova.js"></script>
+		<script src="js/Fish.js"></script>
+		<script src="js/Particles.js"></script>
+		<script src="js/Score.js"></script>
+		<script src="js/blast.js"></script>
+		<script>
+			
+			// DOM elements
+			var container =	document.createElement('div'),
+				layer1 = document.createElement('div'),
+				layer2 = document.createElement('div'),
+				layer3 = document.createElement('div'),
+				layer4 = document.createElement('div');
+				layer4a = document.createElement('div'),
+				layer4b = document.createElement('div'),
+				layer5 = document.createElement('div'),
+				layer6 = document.createElement('div'),
+				layer7 = document.createElement('div'),
+				timerlayer = document.createElement('div'),
+
+			// screen size variables
+				SCREEN_WIDTH = 1024,
+				SCREEN_HEIGHT = 768,
+				HALF_WIDTH = SCREEN_WIDTH / 2,
+				HALF_HEIGHT = SCREEN_HEIGHT / 2,
+
+			// fish variables
+				fishes = [],
+				spareFishes = [],
+				timesec = 60,
+				gameStarted = 0,
+				totalScore = 0,
+				counter = 0, 
+				lifeChance = 0,
+				blastSound=0,
+				crankSound=0,
+				gradeText=0,
+				pauseCount=0,
+				burstSound=0,
+			    backgroundSound=0,
+				resumeTime = 0,
+				resumeScore = 0;
+	
+			// the particle emitter
+			 	emitter = new Emitter(container);
+			 	blast = new Blast(container);
+			    score = new Score(container);
+			 	
+
+			window.addEventListener("load", init);
+			window.addEventListener("resize",gamePause); 
+			
+				
+			function init() {
+				
+				//initialize the sounds	
+				initSounds(); 
+							
+				
+				// set up the CSS for the DOM elements
+				layer1.className = "parallax"; 
+				layer1.style.background = 'url(img/pkgb_256x192.jpg)'; 
+				document.body.appendChild(layer1); 
+				layer2.className = "parallax2"; 
+				document.body.appendChild(layer2); 		
+				layer3.className = "gamestart"; 
+				document.body.appendChild(layer3); 			
+				layer5.className = "life1"; 
+				document.body.appendChild(layer5); 		
+				layer6.className = "life2"; 
+				document.body.appendChild(layer6); 		
+				layer7.className = "life3"; 
+				document.body.appendChild(layer7); 		
+				layer4.className = "gamepause";
+				document.body.appendChild(layer4);
+				layer4.style.visibility = "hidden";
+				layer4a.className = "gameresumebutton"; 
+				layer4.appendChild(layer4a);
+				layer4a.style.visibility = "hidden";
+				layer4b.className = "gamerestartbutton"; 
+				layer4.appendChild(layer4b);	
+				layer4b.style.visibility = "hidden";
+				timerlayer.className = "timer";
+				timerlayer.innerHTML = "<H3>  Time Left   : " + timesec + "s <BR>Your Score :    "+ totalScore +"</H3>";
+				document.body.appendChild(timerlayer);
+				container.className = "container"; 
+				container.style.webkitPerspective= "400";
+				container.style.webkitPerspectiveOrigin= HALF_WIDTH+"px "+HALF_HEIGHT+"px";
+				container.style.width = SCREEN_WIDTH; 
+				container.style.height = SCREEN_HEIGHT; 
+				document.body.appendChild(container); 
+				
+				//Add event listeners to mouse events
+				initMouseListeners(); 				
+				layer3.addEventListener("mousedown", GameStartMouseDown, true); 
+				layer3.addEventListener("touchstart", GameStartTouched, true);
+				layer4a.addEventListener("mousedown", GameResumeMouseDown, true); 
+				layer4a.addEventListener("touchstart", GameResumeTouched, true);
+				layer4b.addEventListener("mousedown", GameStartMouseDown, true); 
+				layer4b.addEventListener("touchstart", GameStartTouched, true);
+				
+				//Add event listeners to trap Device Ready event.
+				document.addEventListener("deviceready",onDeviceReady,false);
+				
+				//Set the gameloop
+				setInterval(gameLoop, 1000/60); 
+				
+				
+				
+			}
+			
+			function onDeviceReady()
+			{
+				document.addEventListener("pause",gamePause,false);
+				backgroundSound.addEventListener("volumechange",gamePause,false);
+				
+				document.addEventListener("resume",onInterruptResume,false);			
+				
+			}
+			
+	
+			function onInterruptResume()
+			{
+				setTimeout(function() {
+                
+       			 }, 0);
+			}
+			
+			
+			function gameLoop() 
+			{
+
+				// every 20 frames, make a new fish
+				if(counter++%20==0)	makeFish();	
+				// Countdown timer
+				if((counter%60==0) && (timesec!=0) && (gameStarted !=0 )) updateTimer();
+				
+				
+				// update the parallax layers
+				//layer1.style.webkitTransform = "translate3d( "+(-1024 +((counter*5)%1024))+"px, 0px, -999px) scale(4)"; 				
+				//layer2.style.webkitTransform  = "translate3d(0px, "+(-768 +((counter*10)%768))+"px, -998px) scale(4)"; 
+				//layer1.style.webkitTransform = "scale(4)";
+	 
+			  	// iteratate through each fish
+				for (i=0; i<fishes.length; i++) {
+					var fish = fishes[i]; 
+					if(!fish.enabled) continue; 
+		
+					// update the fishes position properties
+					
+					fish.update();
+		
+					// and then update the visible object for that fish
+					fish.render(); 
+	
+					// if the fish is way off the top of the screen, then 
+					// remove it. For the finished game you would probably 
+					// add some kind of score penalty at this point. 
+					if(fish.posY <-200) removeFish(fish); 
+		
+				}
+
+				// then update all the particles. 
+				emitter.update();
+				blast.update();
+				score.update();
+				
+			}
+			
+			function gameStart() {
+				layer3.style.opacity = 1;
+				for(i=1;i>0; )
+					{
+					layer3.style.opacity -= 0.0001;
+					i -= 0.0001;
+					}
+				layer3.style.visibility = "hidden";
+				layer2.style.visibility = "hidden";
+				layer4.style.visibility = "hidden";
+				layer4a.style.visibility = "hidden";
+				layer4b.style.visibility = "hidden";
+				layer5.style.opacity = 0.2;
+				layer6.style.opacity = 0.2;
+				layer7.style.opacity = 0.2;
+				gameStarted = 1;
+				timesec = 60;
+				totalScore = 0;
+				lifeChance = 0;
+				container.style.opacity = 1;
+				
+			
+				
+			}
+			
+			
+			function gameResume() {
+
+				
+				layer4.style.visibility = "hidden";
+				layer4a.style.visibility = "hidden";
+				layer4b.style.visibility = "hidden";
+				layer2.style.visibility = "hidden";
+				layer3.style.opacity = 1;
+				for(i=1;i>0; )
+					{
+					layer3.style.opacity -= 0.0001;
+					i -= 0.0001;
+					}
+				layer3.style.visibility = "hidden";
+				container.style.opacity = 1;
+				gameStarted = 1;
+				timesec = resumeTime;
+				totalScore = resumeScore;
+				
+			
+				
+			}
+			
+			
+			function gameEnd() {
+				
+				
+				gameStarted = 0;
+				layer2.style.visibility = "visible";
+				container.style.opacity = 0.3;
+				layer3.style.background = 'url(img/GameEnd_256x192.png)'; 
+				layer3.style.visibility = "visible";
+				layer3.style.opacity = 0;
+				for(i=0;i<=1; )
+				{
+				layer3.style.opacity += 0.0001;
+				i += 0.0001;
+				}
+				layer3.style.opacity = 1;
+				layer5.style.opacity = 0.2;
+				layer6.style.opacity = 0.2;
+				layer7.style.opacity = 0.2;
+				lifeChance = 0;
+
+				if(totalScore <= 0){ gradeText = "Phew !! Rookies attempt.. "; }
+				if(totalScore > 0 && totalScore <= 10000){ gradeText = "You can do better than that.."; }
+				if(totalScore > 10000 && totalScore <= 30000){ gradeText = "That was something to be proud of..."; }
+				if(totalScore > 30000 && totalScore <= 40000){ gradeText = "Professional attemp"; }
+				if(totalScore > 40000 && totalScore < 50000){ gradeText = "You are the Champ! Little more effort and you will be the star";                                                           }
+				if(totalScore > 50000){ gradeText = "WOW ... You are the STAR"; }
+	
+	
+				
+				if(totalScore > localStorage.getItem("highscore"))
+					{
+					localStorage.setItem("highscore",totalScore);
+					
+					}
+				
+				timerlayer.innerHTML = "<H3>  Time Left    : " + timesec + "s <BR>Your Score :    "+ totalScore +" <BR>Best Score : " +localStorage.getItem("highscore")+ "<BR>Result : " + gradeText + "</H3>";
+			
+			//game end variable initiate
+				timesec = 0,
+				gameStarted = 0,
+				totalScore = 0,
+				counter = 0, 
+				lifeChance = 0;
+				
+			}
+			
+			function gamePause() {
+				
+			 if(timesec != 0 && gameStarted != 0)
+			 {	
+				gameStarted = 0;
+				resumeScore = totalScore;
+				resumeTime = timesec;
+				layer2.style.visibility = "visible";
+				container.style.opacity = 0.3;
+				layer4.style.background = 'url(img/GamePause_256x192.png)'; 
+				layer4.style.visibility = "visible";
+				layer4a.style.visibility = "visible";
+				layer4b.style.visibility = "visible";
+				layer4.style.opacity = 0;
+				layer4a.style.opacity = 0;
+				layer4b.style.opacity = 0;
+				for(i=0;i<=1; )
+				{
+				layer4.style.opacity += 0.01;
+				layer4a.style.opacity += 0.01;
+				layer4b.style.opacity += 0.01;
+				
+				i += 0.0001;
+				}
+				layer4.style.opacity = 1;
+				layer4a.style.opacity = 1;
+				layer4b.style.opacity = 1;
+			 }
+				
+			}
+			
+			
+			function updateTimer(){
+				
+				timesec = timesec - 1;
+				updateTimeScore();
+				if (timesec == 0)
+					gameEnd();
+							
+			}
+			
+			function updateTimeScore(){
+				
+				timerlayer.innerHTML = "<H3>  Time Left  : " + timesec + "s <BR>Your Score :    "+ totalScore +"</H3>";
+							
+			}
+			
+			function makeFish() {
+				var fish;
+				
+				// create a new fish in the bottom middle of the stage
+				if(spareFishes.length>0) {
+					// if one is already in the spare array, recycle it
+					fish = spareFishes.pop(); 	
+					fish.enabled = true; 
+					fish.domElement.style.visibility = "visible"; 
+				} else {
+					// otherwise make a new one
+					// Work out the fishimage URL
+					var fishImageSuffix = (fishes.length % 6) + 1;
+					var pointsAwarded = fishImageSuffix * 100;
+					if (fishImageSuffix == 5)
+					   {
+						pointsAwarded = -pointsAwarded;
+
+						}
+					if (fishImageSuffix == 6){pointsAwarded = 0;}
+					
+					var fishImageURL = "img/orangefish0"+fishImageSuffix+".png"; 
+					// and then make a new fish object
+					
+					fish = new Fish(0, 0, 0, fishImageURL, 128, 128, pointsAwarded);
+					
+					// add it into the array of fishes
+					fishes.push(fish); 
+	
+					// then add touch and mousedown events to the fish. 
+					fish.domElement.addEventListener("mouseover", fishMouseOver, true); 
+					fish.domElement.addEventListener("touchstart", fishTouched, true); 
+					//fish.domElement.addEventListener("touchend", fishTouched, true);
+					//fish.domElement.addEventListener("touchmove", fishTouched, true);
+	
+					container.appendChild(fish.domElement);
+					
+
+				}
+				
+				fish.posX = HALF_WIDTH + randomRange(-350,350); 
+				fish.posY = SCREEN_HEIGHT+100;
+				fish.posZ = randomRange(-250,250);
+
+				// give it a random x and y velocity
+				fish.velX = randomRange(-1,1);
+				fish.velY = randomRange(-1,-2);
+				fish.velZ = randomRange(-1,1);
+
+				fish.size = 1;
+				fish.gravity = -0.05; 
+				
+			}
+			
+			function removeFish(fish) {
+				fish.enabled = false; 
+				fish.domElement.style.visibility = "hidden"; 
+				spareFishes.push(fish);
+			}
+	
+			function fishMouseOver(event) {
+				event.preventDefault(); 
+				var fish = getFishFromElement(event.target); 
+				if(fish) explodeFish(fish); 
+			}
+
+			function fishTouched(event) {
+				event.preventDefault(); 
+				for(var j=0; j<event.changedTouches.length; j++) {
+					var fish = getFishFromElement(event.target); 
+					if(fish) explodeFish(fish); 
+				}
+			}
+			
+			function GameStartMouseDown(event) {
+				event.preventDefault(); 
+				gameStart();
+			}
+
+			function GameStartTouched(event) {
+				event.preventDefault(); 
+				for(var j=0; j<event.changedTouches.length; j++) {
+				gameStart();
+				}
+			}
+			
+			function GameResumeMouseDown(event) {
+				event.preventDefault(); 
+				gameResume();
+			}
+
+			function GameResumeTouched(event) {
+				event.preventDefault(); 
+				for(var j=0; j<event.changedTouches.length; j++) {
+				gameResume();
+				}
+			}
+			
+	
+			function getFishFromElement(domElement) {
+				for(var i=0; i<fishes.length;i++) {
+					if(fishes[i].domElement == domElement) return fishes[i]; 
+				}
+				return false; 
+			}	
+
+			function explodeFish(fish) {
+				
+				
+				if(fish.fishPointsAwarded > 0)
+					{playBurst();
+					emitter.makeExplosion(fish.posX, fish.posY, fish.posZ);}
+				if(fish.fishPointsAwarded == 0 ){timesec = timesec + 1;
+				    playCrank();
+					emitter.makeExplosion(fish.posX, fish.posY, fish.posZ);}
+				if(fish.fishPointsAwarded < 0)
+					{playBlast();
+					blast.makeExplosion(fish.posX, fish.posY, fish.posZ);
+					
+					lifeChance++;
+					
+					}
+				
+				score.makeScore(fish.posX, fish.posY, fish.posZ,fish.fishPointsAwarded);
+				totalScore = totalScore + fish.fishPointsAwarded;
+				updateTimeScore();
+				removeFish(fish); 
+					if(lifeChance == 1)layer5.style.opacity = 1;
+						if(lifeChance == 2)layer6.style.opacity = 1;
+						if(lifeChance == 3){layer7.style.opacity = 1; gameEnd();}
+				}
+			
+			
+				
+			function initMouseListeners() {
+				document.addEventListener('mousemove', preventDefault, false);
+				document.addEventListener('mouseover', preventDefault, false);
+				document.addEventListener( 'mousedown', preventDefault, false );
+				document.addEventListener( 'mouseup', preventDefault, false );
+				document.addEventListener( 'touchstart', preventDefault, false );
+				document.addEventListener( 'touchmove', preventDefault, false );
+				document.addEventListener( 'touchend', preventDefault, false );
+			}
+
+			function preventDefault(event) {
+				event.preventDefault(); 
+			}
+			
+			function initSounds() {
+				burstSound = new Audio("sounds/pop.wav");	
+				//burstSound = new Audio("sounds/pop.ogg");
+				blastSound = new Audio("sounds/explosion.wav");
+				//blastSound = new Audio("sounds/explosion.ogg");
+				crankSound = new Audio("sounds/crank.wav");
+				backgroundSound = new Audio("sounds/background_06.wav")
+				burstSound.load();
+				blastSound.load();
+				crankSound.load();
+				backgroundSound.load();
+				// you have to play the sound to make sure it's loaded, otherwise you get 
+				// a glitch the first time you play it
+				burstSound.volume = 0; 
+				blastSound.volume = 0;
+				crankSound.volume = 0;
+				backgroundSound.volume = 0.5;
+				burstSound.play(); 
+				blastSound.play();
+				crankSound.play();
+				backgroundSound.loop = true;
+				backgroundSound.play();
+				
+					
+			}
+			
+			function playBurst() { 
+				burstSound.volume = 1; 
+				burstSound.play();
+				
+			}
+			function playBlast() { 
+				blastSound.volume = 1; 
+				blastSound.play();
+				
+			}
+			function playCrank() { 
+				crankSound.volume = 1; 
+				crankSound.play();
+				
+			}
+			
+			function randomRange(min, max){
+				return (Math.random()*(max-min))+min; 
+			}
+			
+	
+
+		</script>
+	</body>
+</html>
